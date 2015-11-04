@@ -1,55 +1,691 @@
-<!DOCTYPE HTML>
+<!DOCTYPE html>
 <html>
-
 <head>
-<meta name="viewport" content="width=320; user-scalable=no" />
-<meta http-equiv="Content-type" content="text/html; charset=utf-8">
-<title>Auth Demo</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Validacion de usuarios</title>
+
+<link rel="stylesheet" type="text/css" href="css/idioma.css">
+<link rel="stylesheet" type="text/css" href="css/tema.css">
+<link rel="stylesheet" type="text/css" href="css/style.css">
+
+
 <link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css" />
-<script type="text/javascript" src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
-<script type="text/javascript" charset="utf-8" src="cordova.js"></script>
-<script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
-
-<script type="text/javascript" charset="utf-8" src="js/main.js"></script>
+  <script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
+  <script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+<script type="text/javascript" src="js/offline.js"></script>
 </head>
+ 
+<body>
 
-<body onload="init()">
+	<div data-role="page" id="inicio">
+	    <canvas id="canvas"></canvas>
+		<div data-role="header" class="none">
 
-<div id="loginPage" data-role="page">
+		<img id="logo" src="img/logo.svg">
 
-<div data-role="header">
-<h1>Auth Demo</h1>
+
+		</div>
+
+
+	
+		<div data-role="content">	
+		<canvas id="canvas"></canvas>
+		
+		<form id="formulario" >
+		<!--
+		<label> Usuario </label>-->
+		<input type="text" id="nombredeusuario" name="nombredeusuario">
+		<!--<label> Password </label>-->
+		<input type="password" id="clave" name="clave" >
+		 
+		<input type="submit" value="Login">
+		</form>	
+		</div>
+	</div>
+
+	<div data-role="page" id="home" class="page">
+	
+		<div data-role="header" class="none">
+		<h1 id="titulo"></h1>
+
+		</div>
+		 
+		<div data-role="main">	
+		
+		<h3> Proyectos en desarrollo:</h3>
+		<div id="proyectos">
+			
+
+		</div>
+		</div>
+ 
+	</div>
+
+
+	<div data-role="page" id="projects" class="page">
+	
+		<div data-role="header"  class="none header">
+			<a href="#home" class="atrasHome"><</a>
+		<h1 id="tituloProyectos"></h1>
+		</div>
+		 
+		 <div id="entregas">
+		
+
+		</div>
+		</div>
+ 
+	</div>
+
+
+
+	<div data-role="page" id="tarea" class="page">
+	
+		<div data-role="header"  class="none header">
+		<a href="#projects" id="atrasCom" class="atras"><</a>
+		<h1 id="tituloTarea"></h1>
+		</div>
+		 
+		 <div data-role="main"  class="none main">
+			 <div id="coments">
+			
+
+			</div>
+
+			<div class="agregarComent">
+				
+				<form id="agregarCom">
+					
+					<textarea  id="coment" value="Agregar comentario"></textarea>
+					<input type="submit" id="submitCom" data-idTar="" value="comentar">
+
+				</form>
+
+			</div>
+		</div>
+ 
 </div>
 
-<div data-role="content">
-
-<form id="loginForm">
-<div data-role="fieldcontain" class="ui-hide-label">
-<label for="username">Username:</label>
-<input type="text" name="username" id="username" value="" placeholder="Username" />
-</div>
-
-<div data-role="fieldcontain" class="ui-hide-label">
-<label for="password">Password:</label>
-<input type="password" name="password" id="password" value="" placeholder="Password" />
-</div>
-
-<input type="submit" value="Login" id="submitButton">
-</form>
-
-</div>
-
-<div data-role="footer">
-<h4>© Camden Enterprises</h4>
-</div>
-
-</div>
 
 <script>
-$("#loginPage").live("pageinit", function(e) {
-checkPreAuth();
+	
+	var visitedProj = false;
+	var visitedTareas = false;
+	var visitedComents = false;
+	var actualizedComents = true;
+	var idProyecto;
+	var tituloPro;
+	var idTarea;
+	var idUsuario;
+
+	var datosLocales = '{"0":{"0":{"idProyecto":"3","nombre":"Offset de madera","descripcion":"armar disenos cool para empresa de acerrin"},"entregas":[[{"idEntrega":"2","inicio":"2015-10-07","fechaEntrega":"2015-10-22","titulo":"Terminar requerimientos","descripcion":"asd"}]]},"1":{"0":{"idProyecto":"2","nombre":"Pagina web dinamica","descripcion":"Armar web dinamica para empresa de cartchos de tinta."},"entregas":[{"0":{"idEntrega":"1","inicio":"2015-06-08","fechaEntrega":"2015-06-11","titulo":"Entrega de bocetos","descripcion":"entrega de 3 bocetos-"},"tareas":[[{"inicio":"2015-09-08","entrega":"2015-09-30","progreso":"1","titulo":"Muestra de bocetos","descripcion":"MOstrar al cliente los bocetos","numComentarios":10}],[{"inicio":"2015-09-01","entrega":"2015-09-29","progreso":"1","titulo":"Correción de bocetos, ajustar tipo.","descripcion":"Ajustar personaje en base a correciones del cliente.","numComentarios":0}]]},[{"idEntrega":"3","inicio":"2015-10-01","fechaEntrega":"2015-10-09","titulo":"Frutos al Natural","descripcion":"sd"}]]},"validacion":"ok","usuario":"mr","idUsuario":"1", "contra":"123"}';
+
+    localStorage.setItem("datos",datosLocales);
+  	
+	var datosGuardados = localStorage.getItem("datos");
+	var datosObjeto = JSON.parse(datosGuardados); 
+	var usuario = datosObjeto.usuario;
+	var pass = datosObjeto.contra;
+
+	init();
+
+	function init() { document.addEventListener("deviceready", onDeviceReady(), false); }
+
+	function onDeviceReady() {  checkConexion();}
+	
+	function checkConexion() {
+
+		// Pregunto por conexión.
+
+		if (navigator.onLine) {
+			
+			console.log('online');
+			var datosGuardados;
+
+			if(localStorage==undefined){
+				console.log("Vaceeoo");
+
+				needLogin();
+			} 
+
+			else{
+
+				needLogin();
+		 		
+				//obtenerActualizados();
+			
+			}
+		}	
+
+		else {  console.log('offline');	}
+
+	} 
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+function obtenerActualizados(){
+
+	archivoValidacion = "http://gabrielabdala.com.ar/projects/login/validacionReal2.php?jsoncallback=?";
+
+	$.getJSON( archivoValidacion, { usuario:usuario ,password:pass}) 
+					
+					.done(function(respuestaServer) {
+
+						if(respuestaServer.validacion == "ok"){ 
+
+							console.log("bienvenido");
+							console.log(respuestaServer);
+							userLogged(respuestaServer);
+
+
+							
+						 } else{
+
+						 	console.log("lo sentimos ha habido un problema");
+						 }
+
+		});
+
+
+
+};
+
+
+
+function userLogged(objeto){
+
+	var datosObjeto = objeto;
+	localStorage.setItem("datos",datosObjeto);
+
+	var home = $("#home" );
+	$( ":mobile-pagecontainer" ).pagecontainer( "change", home, {  'reload': true,  'allowSamePageTransition': true  });
+	/*var datosGuardados = localStorage.getItem("datos");
+	var datosObjeto = JSON.parse(datosGuardados); 
+	var usuario = datosObjeto.usuario;*/
+
+
+	
+
+
+	$("#home").on("pageshow", function(){
+
+
+		if(!visitedProj){
+
+			$("#titulo").append("Bienvenido, "+ usuario);
+							
+			var elementos = (Object.keys(datosObjeto).length)-4;
+			
+			for(var i=0; i<elementos; i++){
+
+				$("#proyectos").append('<div class="proyWp"><a class="proToggle" data-idProy="'+datosObjeto[i][0].idProyecto+'" href="#">' + datosObjeto[i][0].nombre + '</a></div>');
+							
+			}
+
+			visitedProj = true;
+
+		};
+
+
+		$(".proToggle").click(function(){
+
+			var idPro =  $(this).attr("data-idProy");
+			var titul =  $(this).text();
+						
+			loadTareas(datosObjeto, idPro , titul);
+
+		});
+						
+	});
+				
+}; 
+
+
+
+// Funciones generales: (atemporales a la conexion);
+
+function loadTareas(objetoJson, idPro, tit){
+
+
+
+	console.log(objetoJson);
+	 idProyecto =  idPro;
+	 tituloPro = tit;
+
+	//console.log(idProyecto);
+	//console.log(tituloPro);
+
+	$.mobile.changePage("#projects");
+
+		
+		$("#entregas").empty();
+
+		visitedTareas = true;
+		console.log("entramos al evento");
+
+		$("#tituloProyectos").empty();
+
+		$("#tituloProyectos").append(tituloPro);
+
+		var entregas =  (Object.keys(objetoJson[idProyecto].entregas).length);
+		console.log("entregaaaaaaaas" + entregas );
+								
+		for(var j=0; j<entregas; j++){
+
+			$("#entregas").append('<a class="entregaToggle" data-numEntrega="'+j+'" href="#">' + objetoJson[idProyecto].entregas[j][0].titulo + '</a>');
+			var tareas =  (Object.keys(objetoJson[idProyecto].entregas[j].tareas).length);
+
+			console.log("tareas tiene "+tareas);
+
+			if(tareas>0){
+
+				for(var k=0; k<tareas; k++){
+
+					$("#entregas").append('<div class="tareasWp"><div class="hiden"><input class="check" type="checkbox" name="'+objetoJson[idProyecto].entregas[j].tareas[k][0].titulo+'" value=""><p class="tarea">'+objetoJson[idProyecto].entregas[j].tareas[k][0].titulo +'</p></div ><div class="tagsWp"><span class="fecha">'+objetoJson[idProyecto].entregas[j].tareas[k][0].entrega+'</span></div><div class="comentsWp"><span class="coments"><a class="com" data-idTar="'+objetoJson[idProyecto].entregas[j].tareas[k][0].idTarea+'" href="#">'+objetoJson[idProyecto].entregas[j].tareas[k][0].numComentarios+' comentarios</a></span></div></div>');
+											
+
+					$("#entregas").append('');
+
+				}
+
+
+				$(".com").click(function(){
+
+					titulo = $(this).text();
+
+					idTarea = $(this).attr("data-idTar");
+
+					getComents(titulo,idProyecto,idTarea);
+									
+				});
+
+
+			}
+		
+		}
+
+		
+
+
+
+
+
+
+
+};
+
+
+
+// OBTENER LS SI NO ESTOY LOGUEADO.
+
+function needLogin(){
+				
+			console.log("necesitamos log");			
+	
+
+
+$('#formulario').submit(function() {
+
+		var datosUsuario = $("#nombredeusuario").val();
+		var datosPassword = $("#clave").val();
+		archivoValidacion = "http://gabrielabdala.com.ar/projects/login/validacionReal2.php?jsoncallback=?";
+						 
+		$.getJSON( archivoValidacion, { usuario:datosUsuario ,password:datosPassword}) 
+		
+		.done(function(respuestaServer) {
+
+			if(respuestaServer.validacion == "ok"){ 
+
+				datosLocales = JSON.stringify(respuestaServer);
+			
+				localStorage.setItem("datos", datosLocales);
+				datosGuardados = localStorage.getItem("datos");
+				datosObjeto = JSON.parse(datosGuardados); 
+				usuario = datosObjeto.usuario;
+				pass = datosObjeto.contra;
+				idUsuario = datosObjeto.idUsuario;
+
+
+				var home = $("#home" );
+				$( ":mobile-pagecontainer" ).pagecontainer( "change", home, {  'reload': true,  'allowSamePageTransition': true  });
+				
+
+				$("#home").on("pageshow", function(){
+				
+					console.log("bienvenido");
+
+					if(visitedProj){
+
+						$("#proyectos").empty();
+						$("#titulo").empty();
+						$("#entregas").empty();
+						$("#tituloProyectos").empty();
+					}
+			
+				   $("#titulo").append("Bienvenido, "+ datosObjeto.usuario);
+								
+					var elementos = (Object.keys(datosObjeto).length)-4;
+
+					
+
+
+
+
+					for(var i=0; i<elementos; i++){
+				
+						$("#proyectos").append('<div class="proyWp"><a class="proToggle" data-idProy="'+datosObjeto[i][0].idProyecto+'" href="#">' + datosObjeto[i][0].nombre + '</a></div>');
+								
+					};
+
+
+
+					$(".proToggle").click(function(){
+
+						 idProyecto =  $(this).attr("data-idProy");
+						 tituloPro =  $(this).text();
+
+						$.mobile.changePage("#projects");
+						$("#tituloProyectos").append(tituloPro);
+
+
+						var entregas =  (Object.keys(datosObjeto[idProyecto].entregas).length);
+						//console.log("entregaaaaaaaas" + entregas );
+
+
+												
+						for(var j=0; j<entregas; j++){
+
+							$("#entregas").append('<a class="entregaToggle" data-numEntrega="'+j+'" href="#">' + datosObjeto[idProyecto].entregas[j][0].titulo + '</a>');
+							var tareas =  (Object.keys(datosObjeto[idProyecto].entregas[j].tareas).length);
+
+							if(tareas>0){
+
+								for(var k=0; k<tareas; k++){
+
+									$("#entregas").append('<div class="tareasWp"><div class="hiden"><input class="check" type="checkbox" name="'+datosObjeto[idProyecto].entregas[j].tareas[k][0].titulo+'" value=""><p class="tarea">'+datosObjeto[idProyecto].entregas[j].tareas[k][0].titulo +'</p></div ><div class="tagsWp"><span class="fecha">'+datosObjeto[idProyecto].entregas[j].tareas[k][0].entrega+'</span></div><div class="comentsWp"><span class="coments"><a class="com" data-idTar="'+datosObjeto[idProyecto].entregas[j].tareas[k][0].idTarea+'" href="#">'+datosObjeto[idProyecto].entregas[j].tareas[k][0].numComentarios+' comentarios</a></span></div></div>');
+															
+
+									$("#entregas").append('');
+
+								}
+
+
+
+
+								$(".com").click(function(){
+
+														
+										titulo = $(this).text();
+
+										idTarea = $(this).attr("data-idTar");
+
+										getComents(titulo,idProyecto,idTarea);
+									
+								});
+
+
+							};
+						};
+					});
+					
+				});
+
+			} else{
+
+			 	console.log("lo sentimos ha habido un problema");
+				
+			} 
+
+		
+							
+		});
+
+	});
+
+visitedProj=true;
+			
+};
+
+
+$("#atrasCom").click(function(){
+
+
+		actualizarTareas();
+		console.log("lo mande a actualizar");
+
 });
+
+// ACTUALIZAR LISTA DE COMENTS
+
+function getComents(titulo, idPro, idTar){
+
+	idProyecto = idPro;
+
+	var home = $("#tarea" );
+	$( ":mobile-pagecontainer" ).pagecontainer( "change", home, {  'reload': false,  'allowSamePageTransition': false  });
+
+	console.log("recibo!");
+	console.log(titulo);
+	console.log(idPro);
+	console.log(idTar);
+
+	$("#tarea").on("pageshow", function(){
+
+				if(visitedComents){
+
+					$("#coments").empty();
+					$("#tituloTarea").empty();
+					console.log("empty");
+				}
+
+
+				console.log("pgeshow");
+				$("#tituloTarea").text(titulo);
+
+
+				archivoComentarios = "http://gabrielabdala.com.ar/projects/login/getComentarios.php?jsoncallback=?";
+				$.getJSON( archivoComentarios, { idTarea: idTar}) 
+				.done(function(comentarios) {
+
+				if(comentarios.validacion == "ok"){ 
+					
+				    	
+						var comentariosCant = (Object.keys(comentarios).length)-1;
+					
+			
+						for(i=0;i<comentariosCant;i++){
+
+							$("#coments").append('<p class="comentario">'+comentarios[i][0].comentario+'</p>');
+							$("#coments").append('<div class="userWp"><p class="userComent">'+comentarios[i][0].usuario+'</p></div>');
+
+
+						}
+											
+					}
+				});
+
+		$("#submitCom").attr("data-idTar",idTar);
+
+	});
+
+	visitedComents = true;
+	
+};
+
+
+
+
+
+
+
+
+function actualizarComents(idTarea){
+
+	$.mobile.changePage("#tarea");
+
+	actualizedComents=true;
+
+	$("#tarea").on("pageshow", function(){
+
+						
+		$("#tituloTarea").text("Comantarios");
+
+		$("#coment").val("");
+
+			archivoComentarios = "http://gabrielabdala.com.ar/projects/login/getComentarios.php?jsoncallback=?"
+			$.getJSON( archivoComentarios, { idTarea:idTarea}) 
+			.done(function(comentarios) {
+		
+			if(comentarios.validacion == "ok"){ 
+				    	console.log("entramos");
+						var comentariosCant = (Object.keys(comentarios).length)
+			
+						lastComent = comentariosCant-2;
+						console.log(comentarios);
+
+						$("#coments").append('<p class="comentario">'+comentarios[lastComent][0].comentario+'</p>');
+						$("#coments").append('<div class="userWp"><p class="userComent">'+comentarios[lastComent][0].usuario+'</p></div>');
+
+						
+											
+					}
+			});
+		
+
+	});
+
+
+}
+
+
+
+function actualizarTareas(){
+
+
+	archivoValidacion = "http://gabrielabdala.com.ar/projects/login/validacionReal2.php?jsoncallback=?"
+					 
+	$.getJSON( archivoValidacion, { usuario:usuario ,password:pass}) 
+					
+	.done(function(respuestaServer) {
+
+		if(respuestaServer.validacion == "ok"){ 
+
+			datosLocales = JSON.stringify(respuestaServer);
+			localStorage.setItem("datos", datosLocales);
+
+			datosGuardados = localStorage.getItem("datos");
+			datosObjeto = JSON.parse(datosGuardados); 
+			usuario = datosObjeto.usuario;
+			pass = datosObjeto.contra;
+			idUsuario = datosObjeto.idUsuario;
+
+			$("#entregas").empty();
+
+			console.log("bienvenido");
+			console.log(idProyecto);
+			var entregas =  (Object.keys(datosObjeto[idProyecto].entregas).length);
+			console.log("entregaaaaaaaas" + entregas );
+									
+			for(var j=0; j<entregas; j++){
+
+				$("#entregas").append('<a class="entregaToggle" data-numEntrega="'+j+'" href="#">' + datosObjeto[idProyecto].entregas[j][0].titulo + '</a>');
+				var tareas =  (Object.keys(datosObjeto[idProyecto].entregas[j].tareas).length);
+
+				if(tareas>0){
+
+					for(var k=0; k<tareas; k++){
+
+						$("#entregas").append('<div class="tareasWp"><div class="hiden"><input class="check" type="checkbox" name="'+datosObjeto[idProyecto].entregas[j].tareas[k][0].titulo+'" value=""><p class="tarea">'+datosObjeto[idProyecto].entregas[j].tareas[k][0].titulo +'</p></div ><div class="tagsWp"><span class="fecha">'+datosObjeto[idProyecto].entregas[j].tareas[k][0].entrega+'</span></div><div class="comentsWp"><span class="coments"><a class="com" data-idTar="'+datosObjeto[idProyecto].entregas[j].tareas[k][0].idTarea+'" href="#">'+datosObjeto[idProyecto].entregas[j].tareas[k][0].numComentarios+' comentarios</a></span></div></div>');
+												
+
+						$("#entregas").append('');
+
+					}
+
+
+					$(".com").click(function(){
+
+						
+						titulo = $(this).text();
+
+						idTarea = $(this).attr("data-idTar");
+
+						getComents(titulo,idProyecto,idTarea);
+						
+					});
+
+
+				};
+			
+		};
+
+		
+			
+		 } else{
+	
+		 	console.log("lo sentimos ha habido un problema");
+		 } 
+
+	});
+
+
+		
+
+
+}
+
+
+function refreshPage() {
+
+	console.log("h")
+  $.mobile.changePage(
+    window.location.href,
+    {
+      allowSamePageTransition : true,
+      transition              : 'none',
+      showLoadMsg             : false,
+      reloadPage              : true
+    }
+  );
+};
+
+
+// AGREGAR COMENTARIO.
+
+
+$('#agregarCom').submit(function() {
+
+	var coment = $("#coment").val();
+
+
+	var idTarea = $("#submitCom").attr("data-idTar");
+
+	actualizedComents = false;
+
+	archivoComentarios = "http://gabrielabdala.com.ar/projects/login/addComentario.php?jsoncallback=?"
+		$.getJSON( archivoComentarios, { idTarea:idTarea, idUsuario:idUsuario, comentario: coment}) 
+		.done(function(nuevoComentario) {
+
+		
+		if(nuevoComentario.validacion == "ok"){ 
+			actualizarComents(idTarea);
+		 
+		  }
+
+		});
+	});
+
+
+
+
 </script>
+
+
+
+<script type="text/javascript" src="function/bg.js"></script>
+<script type="text/javascript" src="cordova.js"></script> 
 
 </body>
 </html>
