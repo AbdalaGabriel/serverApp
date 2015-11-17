@@ -5,12 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Validacion de usuarios</title>
 
-<link rel="stylesheet" type="text/css" href="css/idioma.css">
-<link rel="stylesheet" type="text/css" href="css/tema.css">
+<link rel="stylesheet" href="css/jquery.css" />
 <link rel="stylesheet" type="text/css" href="css/style.css">
 
 
-<link rel="stylesheet" href="css/jquery.css" />
+
   <script src="js/jquery-min.js"></script>
   <script src="js/jquery.js"></script>
 
@@ -135,7 +134,8 @@
 	function onDeviceReady() {  checkConexion();}
 	
 	function checkConexion() {
-
+		
+		$.mobile.pageContainer.pagecontainer({ defaults: true });
 		// Pregunto por conexión.
 
 		if (navigator.onLine) {
